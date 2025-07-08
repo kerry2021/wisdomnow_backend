@@ -5,8 +5,8 @@ from http.server import BaseHTTPRequestHandler
 from dotenv import load_dotenv
 
 def CORS_helper(handler):
-    handler.send_header("Access-Control-Allow-Origin", os.environ.get("FRONTEND_URL", "http://localhost:3000"))
-    handler.send_header("Access-Control-Allow-Headers", "Content-Type")
+    handler.send_header("Access-Control-Allow-Origin", "*")
+    handler.send_header("Access-Control-Allow-Headers", "*")
     handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
 class handler(BaseHTTPRequestHandler):
