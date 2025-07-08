@@ -4,14 +4,16 @@ import os
 from http.server import BaseHTTPRequestHandler
 from dotenv import load_dotenv
 
+def CORS_helper(handler):
+    handler.send_header("Access-Control-Allow-Origin", os.environ.get("FRONTEND_URL", "http://localhost:3000"))
+    handler.send_header("Access-Control-Allow-Headers", "Content-Type")
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
 class handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", os.environ.get("FRONTEND_URL", "http://localhost:3000"))
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        CORS_helper(self)
         self.end_headers()
 
     def do_POST(self):
@@ -43,6 +45,7 @@ class handler(BaseHTTPRequestHandler):
 
         # Respond
         self.send_response(200)
+        CORS_helper(self)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
         self.wfile.write("User registered.".encode("utf-8"))
