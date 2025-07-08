@@ -2,8 +2,17 @@ import json
 import psycopg2
 import os
 from http.server import BaseHTTPRequestHandler
+from dotenv import load_dotenv
+
 
 class handler(BaseHTTPRequestHandler):
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", os.environ.get("FRONTEND_URL", "http://localhost:3000"))
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.end_headers()
 
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
