@@ -9,6 +9,13 @@ def CORS_helper(handler):
     handler.send_header("Access-Control-Allow-Headers", "*")
     handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
+def send_json(handler, obj, status=200):    
+    handler.send_response(status)
+    handler.send_header("Content-Type", "application/json")
+    CORS_helper(handler)
+    handler.end_headers()
+    handler.wfile.write(json.dumps(obj).encode("utf-8"))
+
 class handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
@@ -48,7 +55,7 @@ class handler(BaseHTTPRequestHandler):
         CORS_helper(self)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write("User registered.".encode("utf-8"))
+        send_json(self, {"status": "ok"}) 
 
     def do_GET(self):
         self.send_response(405)
