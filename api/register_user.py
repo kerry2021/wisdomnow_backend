@@ -50,11 +50,7 @@ class handler(BaseHTTPRequestHandler):
         cursor.close()
         conn.close()
 
-        # Respond
-        self.send_response(200)
-        CORS_helper(self)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
+        # Respond   
         send_json(self, {"status": "ok"}) 
 
     def do_GET(self):
