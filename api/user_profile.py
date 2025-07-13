@@ -2,6 +2,7 @@ import json
 import psycopg2
 import os
 from http.server import BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
 
 def CORS_helper(handler):
     handler.send_header("Access-Control-Allow-Origin", "*")
@@ -39,10 +40,10 @@ class handler(BaseHTTPRequestHandler):
         cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
         exists = cursor.fetchone()
 
-        if not exists:
+        if exists:
             cursor.execute(
-                "INSERT INTO users (name, email, access_type) VALUES (%s, %s, %s)",
-                (name, email, "student")
+                "Update users SET name = %s WHERE email = %s",
+                (name, email)
             )
             conn.commit()
 
@@ -53,7 +54,33 @@ class handler(BaseHTTPRequestHandler):
         send_json(self, {"status": "ok"}) 
 
     def do_GET(self):
-        self.send_response(405)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
-        self.wfile.write("Method Not Allowed".encode("utf-8"))
+        parsed_path = urlparse(self.path)
+        query_params = parse_qs(parsed_path.query)
+
+        email = query_params.get("email", [None])[0]
+        if not email:
+            send_json(self, {"status": "error", "message": "Email parameter is required"}, status=400)
+            return
+
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        cursor = conn.cursor()
+
+        # Fetch user profile
+        cursor.execute("SELECT name, email, access_type FROM users WHERE email = %s", (email,))
+        user_profile = cursor.fetchone()
+        cursor.close()
+        conn.close()    
+
+        if user_profile:
+            response = {
+                "status": "ok",
+                "profile": {
+                    "name": user_profile[0],
+                    "email": user_profile[1],
+                    "access_type": user_profile[2]
+                }
+            }
+            send_json(self, response)
+        else:
+            send_json(self, {"status": "error", "message": "User not found"}, status=404)
+
