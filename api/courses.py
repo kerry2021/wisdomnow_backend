@@ -47,6 +47,7 @@ class handler(BaseHTTPRequestHandler):
         conn.close()
 
         self.send_response(200)
+        CORS_helper(self)
         self.end_headers()
         self.wfile.write(b'Course deleted successfully')
 
@@ -177,5 +178,5 @@ class handler(BaseHTTPRequestHandler):
         conn.close()
         print(f"Returning {len(courses_list)} courses")
         send_json(self, {"courses": courses_list, "page": page, "limit": limit})
-
+        CORS_helper(self)
         
