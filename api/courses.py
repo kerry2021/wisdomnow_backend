@@ -72,26 +72,13 @@ class handler(BaseHTTPRequestHandler):
 
         image_url = ""
         if image_file:
-            image_url = upload_image_to_supabase(image_file, "uploaded.jpg")
+            image_url = upload_image_to_supabase(image_file, "uploaded.jpg", "course-images")
 
         # Connect to DB
         conn = psycopg2.connect(os.environ["DATABASE_URL"])
         cursor = conn.cursor()
 
-        if course_id:
-            if delete:
-                # Delete course
-                cursor.execute("DELETE FROM courses WHERE id = %s", (course_id,))
-                conn.commit()
-                cursor.close()
-                conn.close()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(json.dumps({"status": "ok", "action": "deleted"}).encode())
-                return
-            
+        if course_id:            
             # Try to update the course
             cursor.execute("SELECT id FROM courses WHERE id = %s", (course_id,))
             existing = cursor.fetchone()
