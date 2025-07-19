@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import cgi
 from api.utils.image_upload import upload_image_to_supabase
+from datetime import datetime
 
 def CORS_helper(handler):
     handler.send_header("Access-Control-Allow-Origin", "*")
@@ -144,13 +145,18 @@ class handler(BaseHTTPRequestHandler):
         courses_list = []
         for course in courses:
             sessions_list = []
-            cursor.execute("SELECT * FROM sessions WHERE course_id = %s", (course[0],))
+            cursor.execute("SELECT id, start_date, end_date FROM sessions WHERE course_id = %s", (course[0],))
             sessions = cursor.fetchall()
             for session in sessions:
+                #fetch instructors for this session
+                cursor.execute("SELECT name FROM session_instructors JOIN users on instructor_id = users.user_id WHERE session_id = %s", (session[0],))
+                instructors = cursor.fetchall()
+                instructors_list = [instructor[0] for instructor in instructors]
                 sessions_list.append({
                     "id": session[0],
-                    "start_date": session[1],
-                    "end_date": session[2],
+                    "start_date": session[1].isoformat() if session[1] else None,
+                    "end_date": session[2].isoformat() if session[2] else None,
+                    "instructors": instructors_list
                 })
             courses_list.append({
                 "id": course[0],
