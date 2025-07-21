@@ -36,6 +36,7 @@ class handler(BaseHTTPRequestHandler):
         instructorIds = data.get("instructorIds", [])
         periodDays = data.get("periodDays", 7)
         periodLabel = data.get("periodLabel", "Week")
+        language = data.get("language", "en")
         print("Received data:", data)     
         
         
@@ -49,8 +50,8 @@ class handler(BaseHTTPRequestHandler):
             cursor.execute("DELETE FROM session_instructors WHERE session_id = %s", (sessionID,))            
         else:
             cursor.execute(
-                "INSERT INTO sessions (course_id, start_date, end_date, period_label) VALUES (%s, %s, %s, %s) RETURNING id",
-                (courseID, startDate, endDate, periodLabel)
+                "INSERT INTO sessions (course_id, start_date, end_date, period_label, language) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                (courseID, startDate, endDate, periodLabel, language)
             )            
             sessionID = cursor.fetchone()[0]
 
