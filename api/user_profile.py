@@ -118,7 +118,7 @@ class handler(BaseHTTPRequestHandler):
         cursor = conn.cursor()
 
         # Fetch user profile
-        cursor.execute("SELECT name, email, access_type, pic_link FROM users WHERE email = %s", (email,))
+        cursor.execute("SELECT user_id, name, email, access_type, pic_link FROM users WHERE email = %s", (email,))
         user_profile = cursor.fetchone()
         cursor.close()
         conn.close()    
@@ -127,10 +127,11 @@ class handler(BaseHTTPRequestHandler):
             response = {
                 "status": "ok",
                 "profile": {
-                    "name": user_profile[0],
-                    "email": user_profile[1],
-                    "access_type": user_profile[2],
-                    "pic_link": user_profile[3]
+                    "user_id": user_profile[0],
+                    "name": user_profile[1],
+                    "email": user_profile[2],
+                    "access_type": user_profile[3],
+                    "pic_link": user_profile[4]
                 }
             }
             send_json(self, response)
