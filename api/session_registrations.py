@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qs
 def CORS_helper(handler):
     handler.send_header("Access-Control-Allow-Origin", "*")
     handler.send_header("Access-Control-Allow-Headers", "*")
-    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE")
 
 def send_json(handler, obj, status=200):    
     handler.send_response(status)
@@ -70,6 +70,8 @@ class handler(BaseHTTPRequestHandler):
         user_id = data.get("user_id")
         role = data.get("role")  # either "applicant" or "student"
 
+        print(f"Received POST data: session_id={session_id}, user_id={user_id}, role={role}")
+
         if not session_id or not user_id or not role:
             send_json(self, {"error": "Missing session_id, user_id, or role"}, status=400)
             return
@@ -109,3 +111,47 @@ class handler(BaseHTTPRequestHandler):
         finally:
             cursor.close()
             conn.close()
+
+    def do_DELETE(self):
+        content_length = int(self.headers['Content-Length'])
+        body = self.rfile.read(content_length)
+        data = json.loads(body)
+
+        session_id = data.get("session_id")
+        user_id = data.get("user_id")
+        role = data.get("role")  # either "applicant" or "student"
+
+        print(f"Received DELETE request: session_id={session_id}, user_id={user_id}, role={role}")
+
+        if not session_id or not user_id or not role:
+            send_json(self, {"error": "Missing session_id, user_id, or role parameter"}, status=400)
+            return
+
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        cursor = conn.cursor()
+
+        try:
+            if role == "applicant":
+                cursor.execute("""
+                    DELETE FROM session_applicants
+                    WHERE session_id = %s AND user_id = %s
+                """, (session_id, user_id))
+            elif role == "student":
+                cursor.execute("""
+                    DELETE FROM session_students
+                    WHERE session_id = %s AND user_id = %s
+                """, (session_id, user_id))
+            else:
+                send_json(self, {"error": "Invalid role, must be 'applicant' or 'student'"}, status=400)
+                return
+
+            conn.commit()
+            send_json(self, {"status": "deleted"})
+
+        except Exception as e:
+            conn.rollback()
+            send_json(self, {"error": str(e)}, status=500)
+        finally:
+            cursor.close()
+            conn.close()
+
