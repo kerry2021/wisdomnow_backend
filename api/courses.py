@@ -147,7 +147,7 @@ class handler(BaseHTTPRequestHandler):
                 session_query += " AND start_date >= %s"
                 session_params.append(start_date)
             if end_date:
-                session_query += " AND end_date <= %s"
+                session_query += " AND end_date >= %s"
                 session_params.append(end_date)
             if language_filter:
                 session_query += " AND language = %s"
@@ -164,7 +164,8 @@ class handler(BaseHTTPRequestHandler):
                         continue
 
                 if student_id:
-                    cursor.execute("SELECT 1 FROM session_students WHERE session_id = %s AND student_id = %s", (session[0], student_id))
+                    print("Checking student enrollment for session:", session[0], "and student_id:", student_id)
+                    cursor.execute("SELECT 1 FROM session_students WHERE session_id = %s AND user_id = %s", (session[0], student_id))
                     if cursor.fetchone() is None:
                         continue
 
