@@ -180,15 +180,15 @@ class handler(BaseHTTPRequestHandler):
                     "instructors": instructors_list
                 })
 
-            if sessions_list:
-                courses_list.append({
-                    "id": course[0],
-                    "course_title": course[1],
-                    "pic_link": course[2],
-                    "description": course[3],
-                    "sessions": sessions_list,
-                    "pages_count": total_pages,
-                })
+            
+            courses_list.append({
+                "id": course[0],
+                "course_title": course[1],
+                "pic_link": course[2],
+                "description": course[3],
+                "sessions": sessions_list,
+                "pages_count": total_pages,
+            })
 
         cursor.close()
         conn.close()
