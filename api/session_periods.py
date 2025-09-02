@@ -32,14 +32,15 @@ class handler(BaseHTTPRequestHandler):
 
         session_period_id = data.get("sessionPeriodId")
         mkd_text = data.get("markdownText")
+        total_pages = data.get("totalPages")
 
         conn = psycopg2.connect(os.environ["DATABASE_URL"])
         cursor = conn.cursor()
 
         if session_period_id:
             cursor.execute(
-                "UPDATE session_periods SET content_md = %s WHERE id = %s",
-                (mkd_text, session_period_id)
+                "UPDATE session_periods SET content_md = %s, total_pages = %s WHERE id = %s",
+                (mkd_text, total_pages, session_period_id)
             )
             conn.commit()
             cursor.close()
