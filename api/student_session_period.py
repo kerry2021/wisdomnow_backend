@@ -74,4 +74,34 @@ class handler(BaseHTTPRequestHandler):
         conn.close()
         print("User session period updated successfully")
         send_json(self, {"status": "success", "message": "User session period updated successfully"})
+    
+    def do_GET(self):
+        query_components = parse_qs(urlparse(self.path).query)        
+        session_id = query_components.get("sessionId", [None])[0]
+        user_id = query_components.get("userId", [None])[0]
         
+        #access user's profile, get their name, email and profile picture
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, email, pic_link FROM users WHERE user_id = %s", (user_id,))
+        user = cursor.fetchone()
+        profile_info = {"name": user[0], "email": user[1], "pic_link": user[2]} if user else None        
+        #find all session periods for the given session_id, and get the user's progress for each period
+        cursor.execute(
+            """ 
+            SELECT sp.id, sp.start_date, sp.end_date, COALESCE(ssp.progress, 0) as progress, sp.total_pages 
+            FROM session_periods sp 
+            LEFT JOIN student_session_period ssp 
+            ON sp.id = ssp.session_period_id AND ssp.user_id = %s 
+            WHERE sp.session_id = %s
+            """,
+            (user_id, session_id)
+        )
+        periods = cursor.fetchall()        
+        periods_list = [{"id": period[0], "start_date": period[1].isoformat() if period[1] else None, "end_date": period[2].isoformat() if period[2] else None, "progress": period[3], "total_pages": period[4]} for period in periods]
+        #sort periods by start_date
+        periods_list.sort(key=lambda x: x["start_date"] or "")
+
+        cursor.close()
+        conn.close()        
+        send_json(self, {"status": "ok", "profile": profile_info, "periods": periods_list})
