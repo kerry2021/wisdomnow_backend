@@ -84,7 +84,6 @@ class handler(BaseHTTPRequestHandler):
         query = urlparse(self.path).query
         params = parse_qs(query)
         session_id = params.get("sessionId", [None])[0]
-        user_id = params.get("userId", [None])[0]
         print(f"Fetching session with ID: {session_id}")
 
         #grab the session matching the session ID and all instructors for that session
@@ -103,11 +102,11 @@ class handler(BaseHTTPRequestHandler):
             
             # Grab session periods
             cursor.execute(
-                "SELECT session_periods.id as id, start_date, end_date, COALESCE(progress, 0) as progress, total_pages FROM session_periods LEFT JOIN student_session_period ON session_periods.id = student_session_period.session_period_id AND student_session_period.user_id = %s WHERE session_id = %s",
-                (user_id, session_id)
+                "SELECT id, start_date, end_date FROM session_periods WHERE session_id = %s",
+                (session_id,)
             )
             periods = cursor.fetchall()
-            periods_list = [{"id": period[0], "start_date": period[1].isoformat() if period[1] else None, "end_date": period[2].isoformat() if period[2] else None, "progress": period[3], "total_pages": period[4]} for period in periods]
+            periods_list = [{"id": period[0], "start_date": period[1].isoformat() if period[1] else None, "end_date": period[2].isoformat() if period[2] else None} for period in periods]
 
             session_data = {
                 "id": session[0],
